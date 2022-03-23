@@ -333,6 +333,17 @@ module.exports = function (webpackEnv) {
           babelRuntimeRegenerator,
         ]),
       ],
+      fallback: {
+        url: require.resolve('url'),
+        fs: require.resolve('fs'),
+        assert: require.resolve('assert'),
+        crypto: require.resolve('crypto-browserify'),
+        http: require.resolve('stream-http'),
+        https: require.resolve('https-browserify'),
+        os: require.resolve('os-browserify/browser'),
+        buffer: require.resolve("buffer"),
+        stream: require.resolve('stream-browserify'),
+      }
     },
     module: {
       strictExportPresence: true,
@@ -561,6 +572,10 @@ module.exports = function (webpackEnv) {
       ].filter(Boolean),
     },
     plugins: [
+      // new webpack.ProvidePlugin({
+      //   process: 'process/browser',
+      //   Buffer: ['buffer', 'Buffer'],
+      // }),
       // Generates an `index.html` file with the <script> injected.
       new HtmlWebpackPlugin(
         Object.assign(
