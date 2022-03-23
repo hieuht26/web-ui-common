@@ -1,0 +1,44 @@
+.common-ui__table {
+  &__header {
+    display: flex;
+    font-weight: 800;
+  }
+  &--unsort, &--sort {
+    margin-left: auto;
+    .icon-down, .icon-up {
+      opacity: 0.4;
+      font-size: 1em;
+    }
+  }
+  &--sort {
+    &--asc {
+      .icon-down {
+        opacity: 1;
+      }
+    }
+    &--desc {
+      .icon-up {
+        opacity: 1;
+      }
+    }
+  }
+  &__resizer {
+    display: inline-block;
+    background: #000;
+    opacity: 0;
+    width: 2px;
+    height: 100%;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transform: translateX(50%);
+    z-index: 1;
+    touch-action:none;
+    &:hover {
+      opacity: 0.2;
+    }
+    &--resizing {
+      opacity: 0.4;
+    }
+  }
+}

@@ -8,9 +8,10 @@ const range = len => {
   return arr
 }
 
-const newPerson = () => {
+const newPerson = (id) => {
   const statusChance = Math.random()
   return {
+    id,
     firstName: namor.generate({ words: 1, numbers: 0 }),
     lastName: namor.generate({ words: 1, numbers: 0 }),
     age: Math.floor(Math.random() * 30),
@@ -25,12 +26,12 @@ const newPerson = () => {
   }
 }
 
-export default function makeData(...lens) {
+function makeDataRan(...lens) {
   const makeDataLevel = (depth = 0) => {
     const len = lens[depth]
-    return range(len).map(d => {
+    return range(len).map((d, i) => {
       return {
-        ...newPerson(),
+        ...newPerson(i),
         subRows: lens[depth + 1] ? makeDataLevel(depth + 1) : undefined,
       }
     })
@@ -39,6 +40,14 @@ export default function makeData(...lens) {
   return makeDataLevel()
 }
 
+export default function makeData(...lens) {
+  const data = makeDataRan(...lens);
+  return {
+    records: data,
+    totalCount: 100
+  };
+};
+
 export const columns = [
   {
     Header: 'Name',
@@ -46,6 +55,7 @@ export const columns = [
       {
         Header: 'First Name',
         accessor: 'firstName',
+        sort: true
       },
       {
         Header: 'Last Name',
