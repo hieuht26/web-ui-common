@@ -5,6 +5,8 @@ import "./tablePage.scss";
 
 function TablePage() {
 
+  const listDisableCheckbox = ["T2"];
+  const [selectedRows, setSelectedRows] = React.useState({ [`T${Math.floor(Math.random() * 10)}`]: true });
   const [data, setData] = React.useState(makeData(10));
 
 
@@ -17,13 +19,64 @@ function TablePage() {
     totalCount: 100,
   }
 
+  const onAddRowSelectedRandom = () => {
+    const newSelectedRow = `T${Math.floor(Math.random() * 10)}`
+    setSelectedRows({
+      ...selectedRows,
+      [newSelectedRow]: true
+    }) 
+  }
+
+  const columns2 = [
+    {
+      Header: 'Name',
+      columns: [
+        {
+          Header: <i>First Name</i>,
+          accessor: 'firstName',
+          sort: true
+        },
+        {
+          Header: 'Last Name',
+          accessor: 'lastName',
+        },
+      ],
+    },
+    {
+      Header: 'Info',
+      columns: [
+        {
+          Header: 'Age',
+          accessor: 'age',
+        },
+        {
+          Header: 'Visits',
+          accessor: 'visits',
+        },
+        {
+          Header: 'Status',
+          accessor: 'status',
+        },
+        {
+          Header: 'Profile Progress',
+          accessor: 'progress',
+        },
+      ],
+    },
+  ];
+
+
   return (
     <div className="table-page">
+      <button onClick={onAddRowSelectedRandom}>Add selected row</button>
       <CommonTable
         data={data}
-        columns={columns}
+        columns={columns2}
         pageOptions={pageOptions}
         canDragDrop
+        canSelect={true}
+        listDisableCheckbox={listDisableCheckbox}
+        // havePagination={false}
       />
     </div>
   );

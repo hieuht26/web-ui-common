@@ -6,7 +6,7 @@ const DEFAULT_PAGE_OPTIONS = {
   defaultPageNum: 0,
 };
 
-export default function usePagination(pageOptions) {
+export default function useMyPagination(pageOptions) {
   const [pageNum, setPageNum] = useState(DEFAULT_PAGE_OPTIONS.defaultPageNum);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_OPTIONS.defaultPageSize);
   const [rowsPerPageOptions, setRowsPerPageOptions] = useState(DEFAULT_PAGE_OPTIONS.rowsPerPageOptions);

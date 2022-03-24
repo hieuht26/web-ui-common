@@ -1,4 +1,11 @@
 .common-ui__table {
+  &__wrapper {
+    max-height: 600px;
+    overflow: auto;
+  }
+  table {
+    min-width: 100%;
+  }
   &__header {
     display: flex;
     font-weight: 800;

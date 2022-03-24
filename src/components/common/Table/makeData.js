@@ -11,7 +11,7 @@ const range = len => {
 const newPerson = (id) => {
   const statusChance = Math.random()
   return {
-    id,
+    id: `T${id}`,
     firstName: namor.generate({ words: 1, numbers: 0 }),
     lastName: namor.generate({ words: 1, numbers: 0 }),
     age: Math.floor(Math.random() * 30),
@@ -50,7 +50,7 @@ export default function makeData(...lens) {
 
 export const columns = [
   {
-    Header: 'Name',
+    Header: () => <i>Name</i>,
     columns: [
       {
         Header: 'First Name',
