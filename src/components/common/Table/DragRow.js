@@ -2,10 +2,11 @@ import React from "react";
 import { useDrag, useDrop } from "react-dnd";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
+// import { CommonCheckbox } from "components";
 
 const DND_ITEM_TYPE = "row";
 
-const DragRow = ({ row, index, moveRow }) => {
+const DragRow = ({ row, index, moveRow, haveCheckbox, ...rest }) => {
   const ref = React.useRef(null);
 
   const [{ handlerId }, drop] = useDrop({
@@ -73,6 +74,17 @@ const DragRow = ({ row, index, moveRow }) => {
   drag(drop(ref));
   return (
     <TableRow ref={ref} style={{ opacity }} data-handler-id={handlerId}>
+      {haveCheckbox && (
+        <TableCell>
+          {/* <CommonCheckbox onChange={rest?.onSelectRow} checked={rest?.rowIsChecked} /> */}
+          <input
+            type="checkbox"
+            onChange={rest?.onSelectRow}
+            checked={rest?.rowIsChecked}
+            disabled={rest?.disabledCheckbox}
+          />
+        </TableCell>
+      )}
       {row.cells.map((cell) => {
         return (
           <TableCell {...cell.getCellProps()}>{cell.render("Cell")}</TableCell>

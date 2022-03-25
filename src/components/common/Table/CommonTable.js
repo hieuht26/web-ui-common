@@ -6,7 +6,7 @@ import {
   useResizeColumns,
   usePagination,
   useBlockLayout,
-  useRowSelect,
+  // useMountedLayoutEffect,
 } from "react-table";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -25,57 +25,17 @@ import "./commonTable.scss";
 import DragRow from "./DragRow";
 import useMyPagination from "./useMyPagination";
 import makeData, { columns } from "./makeData";
-import CommonCheckbox from "../Checkbox/Checkbox";
+// import CommonCheckbox from "../Checkbox/Checkbox";
 
 const CommonTable = (props) => {
-  const { columns, data, customClass, canResize, canDragDrop, canSelect,
+  const { columns, data, customClass, canResize, canDragDrop,
     pageOptions, listDisableCheckbox, haveCheckAll, handleSelectedRowsChange,
-    havePagination, handleUpdateDragDrop, blockId
+    havePagination, handleUpdateDragDrop, blockId, selectedRowsId, haveCheckbox
   } = props;
   const [records, setRecords] = React.useState(data.records);
+  const [isSelectAll, toggleSelectAll] = React.useState(false);
   const { pageNum, pageSize, rowsPerPageOptions, setPageNum, setPageSize } =
     useMyPagination(pageOptions);
-
-  const selectionHook = React.useCallback(hooks => {
-    hooks.visibleColumns.push(columns => [
-      // Let's make a column for selection
-      {
-        id: 'selection',
-        disableResizing: true,
-        minWidth: 35,
-        width: 35,
-        maxWidth: 35,
-        // The header can use the table's getToggleAllRowsSelectedProps method
-        // to render a checkbox
-        Header: ({ rows, getToggleAllPageRowsSelectedProps, selectedFlatRows }) => {
-          const changeableRows = rows.filter((row) => !row.disableCheckbox);
-
-          const allSelected = changeableRows.every((row) => {
-            return selectedFlatRows.findIndex(selected => selected.id === row.id) > -1;
-          });
-          const onChange = (e) => {
-            e.stopPropagation();
-            changeableRows.forEach((row) => row.toggleRowSelected(!allSelected));
-          };
-          return (
-            <div>
-              {haveCheckAll && <CommonCheckbox {...getToggleAllPageRowsSelectedProps()} title={undefined} checked={allSelected} onChange={onChange} />}
-            </div>
-          );
-        },
-        // The cell can use the individual row's getToggleRowSelectedProps method
-        // to the render a checkbox
-        Cell: ({ row }) => {
-          return (
-            <div>
-              <CommonCheckbox {...row.getToggleRowSelectedProps()} title={undefined} disabled={row.disableCheckbox} />
-            </div>
-          );
-        },
-      },
-      ...columns,
-    ])
-  }, [haveCheckAll]);
 
   const getRowId = React.useCallback((row) => {
     return row.id;
@@ -87,13 +47,7 @@ const CommonTable = (props) => {
   if (canResize) {
     plugins = [...plugins, useBlockLayout, useResizeColumns];
   }
-  if (canSelect) {
-    plugins = [...plugins, useRowSelect, selectionHook];
-  }
-
-  const { getTableBodyProps, getTableProps, headerGroups, page, prepareRow, selectedFlatRows,
-    state: { selectedRowIds }
-  } =
+  const { getTableBodyProps, getTableProps, headerGroups, page, prepareRow } =
     useTable(
       {
         columns,
@@ -130,6 +84,41 @@ const CommonTable = (props) => {
     e.stopPropagation();
   };
 
+  const handleSelectAll = React.useCallback((selectedRowsId) => {
+    let newSelectedRowsId = {
+      ...selectedRowsId
+    };
+    const newSelectedRows = [];
+    data.records.forEach(item => {
+      if (listDisableCheckbox.indexOf(item.id) > -1) return;
+      newSelectedRowsId[item.id] = !isSelectAll;
+      if (!isSelectAll) {
+        newSelectedRows.push(item);
+      }
+    });
+    handleSelectedRowsChange(newSelectedRows, newSelectedRowsId);
+  }, [data.records, selectedRowsId, listDisableCheckbox, isSelectAll]);
+
+  const handleSelectRow = React.useCallback((row, isChecked) => {
+    const newSelectedRowsId = {
+      ...selectedRowsId,
+      [row.id]: !isChecked
+    };
+    const newSelectedRows = data.records.filter(item => newSelectedRowsId[item.id]);
+    handleSelectedRowsChange(newSelectedRows, newSelectedRowsId);
+  }, [data.records, selectedRowsId]);
+
+  const checkSelectAll = React.useCallback(() => {
+    const isSelectAll = data?.records.every(item => {
+      return selectedRowsId[item.id] || listDisableCheckbox.indexOf(item.id) > -1;
+    });
+    toggleSelectAll(isSelectAll);
+  }, [data.records, selectedRowsId, listDisableCheckbox]);
+
+  useEffect(() => {
+    checkSelectAll(data, selectedRowsId);
+  }, [data, selectedRowsId])
+
   useEffect(() => {
     setRecords(data.records);
   }, [data]);
@@ -139,14 +128,6 @@ const CommonTable = (props) => {
       pageOptions.handleChangePage({ pageNum, pageSize });
     }
   }, [pageNum, pageSize]);
-
-  useEffect(() => {
-    const selectedRecords = (selectedFlatRows || []).map(item =>item?.original);
-    if (handleSelectedRowsChange) {
-      handleSelectedRowsChange(selectedRecords, selectedRowIds);
-    }
-  }, [selectedRowIds]);
-
   return (
     <div id={blockId} className={classNames("common-ui__table", customClass)}>
       <div className={classNames("common-ui__table__wrapper")}>
@@ -154,6 +135,12 @@ const CommonTable = (props) => {
           <TableHead>
             {headerGroups.map((headerGroup) => (
               <TableRow {...headerGroup.getHeaderGroupProps()}>
+                {haveCheckbox && (
+                  <TableCell>
+                    {/* <CommonCheckbox checked={isSelectAll} onChange={handleSelectAll} /> */}
+                    {haveCheckAll ? <input type="checkbox" onChange={() => handleSelectAll()} checked={isSelectAll} /> : <i />}
+                  </TableCell>
+                )}
                 {headerGroup.headers.map((column) => {
                   return (
                     <TableCell
@@ -162,7 +149,6 @@ const CommonTable = (props) => {
                           ? column.getSortByToggleProps({ title: undefined })
                           : undefined
                       )}
-                      // onClick={() => column.toggleSortBy(!column.isSortedDesc)} // uncomment to custom sort by click icon
                     >
                       <div className="common-ui__table__header">
                         {column.render("Header")}
@@ -218,10 +204,20 @@ const CommonTable = (props) => {
                   index={index}
                   row={row}
                   moveRow={moveRow}
+                  haveCheckbox={haveCheckbox}
+                  onSelectRow={() => handleSelectRow(row?.original, selectedRowsId[row.id])}
+                  rowIsChecked={selectedRowsId[row.id]}
+                  disabledCheckbox={listDisableCheckbox.indexOf(row.id) > -1}
                   {...row.getRowProps()}
                 />
               ) : (
                 <TableRow {...row.getRowProps()}>
+                  {haveCheckbox && (
+                    <TableCell>
+                      {/* <CommonCheckbox onChange={() => handleSelectRow(row, selectedRowsId[row.id], selectedRowsId)} checked={selectedRowsId[row.id]} /> */}
+                      <input type="checkbox" onChange={() => handleSelectRow(row, selectedRowsId[row.id])} disabled={listDisableCheckbox.indexOf(row.id) > -1} checked={selectedRowsId[row.id]} />
+                    </TableCell>
+                  )}
                   {row.cells.map((cell) => {
                     return (
                       <TableCell {...cell.getCellProps()}>
@@ -254,7 +250,6 @@ CommonTable.propTypes = {
   canDragDrop: PropTypes.bool,
   handleUpdateDragDrop: PropTypes.func,
   canResize: PropTypes.bool,
-  canSelect: PropTypes.bool,
   columns: PropTypes.arrayOf(
     PropTypes.shape({
       Header: PropTypes.any, // String | Function | React.Component
@@ -284,8 +279,10 @@ CommonTable.propTypes = {
     handleChangePage: PropTypes.func,
   }),
   listDisableCheckbox: PropTypes.array, // list row id to disable checkbox
+  haveCheckbox: PropTypes.bool,
   haveCheckAll: PropTypes.bool,
-  handleSelectedRowsChange: PropTypes.func
+  handleSelectedRowsChange: PropTypes.func,
+  selectedRowsId: PropTypes.object
 };
 
 CommonTable.defaultProps = {
@@ -294,7 +291,6 @@ CommonTable.defaultProps = {
   canDragDrop: false, // canResize and canDragDrop cannot be the same true
   handleUpdateDragDrop: () => {},
   canResize: false,
-  canSelect: false,
   columns: [],
   data: {
     records: [],
@@ -305,8 +301,10 @@ CommonTable.defaultProps = {
     handleChangePage: () => {},
   },
   listDisableCheckbox: [],
+  haveCheckbox: false,
   haveCheckAll: true,
-  handleSelectedRowsChange: () => {}
+  handleSelectedRowsChange: () => {},
+  selectedRowsId: {}
 };
 
 const withTable = (Component) => {
@@ -342,7 +340,7 @@ const withExampleTable = (Component) => {
         columns={columns}
         pageOptions={pageOptions}
         canDragDrop
-        canSelect
+        haveCheckbox
         listDisableCheckbox={listDisableCheckbox}
       />
     );

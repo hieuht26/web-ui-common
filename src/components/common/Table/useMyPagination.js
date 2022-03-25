@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 const DEFAULT_PAGE_OPTIONS = {
   rowsPerPageOptions: [5, 10, 25],
-  defaultPageSize: 10,
+  defaultPageSize: 5,
   defaultPageNum: 0,
 };
 
