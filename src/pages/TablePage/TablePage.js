@@ -34,11 +34,13 @@ function TablePage() {
         {
           Header: <i>First Name</i>,
           accessor: 'firstName',
+          id: 'firstName',
           sort: true
         },
         {
           Header: 'Last Name',
           accessor: 'lastName',
+          id: 'lastName',
         },
       ],
     },
@@ -48,18 +50,22 @@ function TablePage() {
         {
           Header: 'Age',
           accessor: 'age',
+          id: 'age',
         },
         {
           Header: 'Visits',
           accessor: 'visits',
+          id: 'visits',
         },
         {
           Header: 'Status',
           accessor: 'status',
+          id: 'status',
         },
         {
           Header: 'Profile Progress',
           accessor: 'progress',
+          id: 'progress',
         },
       ],
     },

@@ -30,7 +30,7 @@ import CommonCheckbox from "../Checkbox/Checkbox";
 const CommonTable = (props) => {
   const { columns, data, customClass, canResize, canDragDrop, canSelect,
     pageOptions, listDisableCheckbox, haveCheckAll, handleSelectedRowsChange,
-    havePagination
+    havePagination, handleUpdateDragDrop, blockId
   } = props;
   const [records, setRecords] = React.useState(data.records);
   const { pageNum, pageSize, rowsPerPageOptions, setPageNum, setPageSize } =
@@ -114,14 +114,16 @@ const CommonTable = (props) => {
 
   const moveRow = (dragIndex, hoverIndex) => {
     const dragRecord = records[dragIndex];
-    setRecords(
-      update(records, {
-        $splice: [
-          [dragIndex, 1],
-          [hoverIndex, 0, dragRecord],
-        ],
-      })
-    );
+    const newRecords = update(records, {
+      $splice: [
+        [dragIndex, 1],
+        [hoverIndex, 0, dragRecord],
+      ],
+    });
+    setRecords(newRecords);
+    if (handleUpdateDragDrop) {
+      handleUpdateDragDrop(newRecords);
+    }
   };
 
   const removeClick = (e) => {
@@ -139,14 +141,14 @@ const CommonTable = (props) => {
   }, [pageNum, pageSize]);
 
   useEffect(() => {
-    // console.log(selectedFlatRows, selectedRowIds)
+    const selectedRecords = (selectedFlatRows || []).map(item =>item?.original);
     if (handleSelectedRowsChange) {
-      handleSelectedRowsChange(selectedFlatRows, selectedRowIds)
+      handleSelectedRowsChange(selectedRecords, selectedRowIds);
     }
-  }, [selectedFlatRows]);
+  }, [selectedRowIds]);
 
   return (
-    <div className={classNames("common-ui__table", customClass)}>
+    <div id={blockId} className={classNames("common-ui__table", customClass)}>
       <div className={classNames("common-ui__table__wrapper")}>
         <MuiTable {...getTableProps()}>
           <TableHead>
@@ -236,7 +238,7 @@ const CommonTable = (props) => {
       {havePagination && <TablePagination
         rowsPerPageOptions={rowsPerPageOptions}
         component="div"
-        count={100}
+        count={data.totalCount}
         rowsPerPage={pageSize}
         page={pageNum}
         onPageChange={handleChangePage}
@@ -247,20 +249,26 @@ const CommonTable = (props) => {
 };
 
 CommonTable.propTypes = {
+  blockId: PropTypes.string.isRequired,
   customClass: PropTypes.string,
   canDragDrop: PropTypes.bool,
+  handleUpdateDragDrop: PropTypes.func,
   canResize: PropTypes.bool,
   canSelect: PropTypes.bool,
   columns: PropTypes.arrayOf(
     PropTypes.shape({
       Header: PropTypes.any, // String | Function | React.Component
       accessor: PropTypes.string,
+      id: PropTypes.string,
       className: PropTypes.string,
       columns: PropTypes.array,
       style: PropTypes.object,
       sort: PropTypes.bool,
       Filter: PropTypes.element,
-      Cell: PropTypes.element, // Custom cell: ({ value, row }) => { return element }
+      Cell: PropTypes.oneOfType([
+        PropTypes.func,
+        PropTypes.element
+      ]), // Custom cell: ({ value, row }) => { return element }
     })
   ),
   data: PropTypes.shape({
@@ -281,8 +289,10 @@ CommonTable.propTypes = {
 };
 
 CommonTable.defaultProps = {
+  blockId: "common-table",
   customClass: null,
   canDragDrop: false, // canResize and canDragDrop cannot be the same true
+  handleUpdateDragDrop: () => {},
   canResize: false,
   canSelect: false,
   columns: [],
